@@ -1,0 +1,54 @@
+# Local environment.
+#   Dependencies only (to run the API with dotnet run): docker compose up -d postgres redis
+#   Everything in containers:                          docker compose up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: icmarkets
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d icmarkets"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/API/Dockerfile
+    environment:
+      # Development: Swagger UI and migrations on startup.
+      ASPNETCORE_ENVIRONMENT: Development
+      # JSON logs as in production; Development alone would switch them to text.
+      LogFormat: Json
+      ConnectionStrings__Blockchain: Host=postgres;Port=5432;Database=icmarkets;Username=postgres;Password=postgres
+      ConnectionStrings__Redis: redis:6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Time between SIGTERM and SIGKILL; enough for the job to stop and release its Redis lock.
+    stop_grace_period: 30s
+
+volumes:
+  postgres-data:
