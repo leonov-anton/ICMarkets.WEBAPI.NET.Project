@@ -1,0 +1,22 @@
+@ICMarkets.API_HostAddress = http://localhost:5273
+
+GET {{ICMarkets.API_HostAddress}}/api/blockchain/coins
+Accept: application/json
+
+###
+
+GET {{ICMarkets.API_HostAddress}}/api/blockchain/chain
+Accept: application/json
+
+###
+
+GET {{ICMarkets.API_HostAddress}}/api/blockchain/pairs
+Accept: application/json
+
+###
+
+GET {{ICMarkets.API_HostAddress}}/api/blockchain/btc/main?pageSize=10
+Accept: application/json
+X-Correlation-ID: manual-test
+
+###
